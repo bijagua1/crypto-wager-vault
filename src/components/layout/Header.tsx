@@ -79,10 +79,10 @@ export const Header = () => {
 
         {/* Center: Navigation (Desktop) */}
         <nav className="hidden md:flex items-center gap-6">
-          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>Sports</Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>Live Betting</Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>My Bets</Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>Promotions</Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/?tab=all")}>Sports</Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/?tab=live")}>Live Betting</Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/?tab=today")}>My Bets</Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/?tab=popular")}>Promotions</Button>
         </nav>
 
         {/* Right: User Actions */}
@@ -118,10 +118,10 @@ export const Header = () => {
       <div className="md:hidden border-t border-border bg-card">
         <div className="container px-4 py-2">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>Sports</Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>Live</Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>My Bets</Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>Wallet</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/?tab=all")}>Sports</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/?tab=live")}>Live</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/?tab=today")}>My Bets</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/?tab=popular")}>Wallet</Button>
           </div>
         </div>
       </div>

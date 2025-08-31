@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap, TrendingUp, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
 
 // Sample game data
 const sampleGames = [
@@ -106,7 +107,7 @@ export const MainSportsbook = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [games, setGames] = useState<typeof sampleGames>([]);
   const [loading, setLoading] = useState(false);
-
+  const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     const fetchOdds = async () => {
       setLoading(true);
@@ -122,6 +123,12 @@ export const MainSportsbook = () => {
     };
     fetchOdds();
   }, []);
+
+  // Sync tab with URL ?tab=
+  useEffect(() => {
+    const tabParam = (searchParams.get("tab") || "all").toLowerCase();
+    if (tabParam !== activeTab) setActiveTab(tabParam);
+  }, [searchParams, activeTab]);
 
   const sourceGames = games.length ? games : sampleGames;
 
@@ -207,7 +214,7 @@ const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
 
           {/* Game Filters */}
           <div className="mb-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); if (value === "all") setSearchParams({}); else setSearchParams({ tab: value }); }}>
               <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
                 <TabsTrigger value="all" className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
