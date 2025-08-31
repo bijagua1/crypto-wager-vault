@@ -157,9 +157,18 @@ export const MainSportsbook = () => {
     setBetSelections([]);
   };
 
-  const liveGames = sourceGames.filter(game => game.isLive);
-  const upcomingGames = sourceGames.filter(game => !game.isLive);
+const selectedKeys = new Set(
+  betSelections
+    .filter((s) => s.isSelected)
+    .map((s) => `${s.gameId}-${s.betType}-${s.selection}`)
+);
 
+const liveGames = [...sourceGames.filter((game) => game.isLive)].sort(
+  (a, b) => new Date(a.commenceTime).getTime() - new Date(b.commenceTime).getTime()
+);
+const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
+  (a, b) => new Date(a.commenceTime).getTime() - new Date(b.commenceTime).getTime()
+);
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -234,6 +243,7 @@ export const MainSportsbook = () => {
                             key={game.id} 
                             game={game} 
                             onBetSelect={handleBetSelect}
+                            selectedKeys={selectedKeys}
                           />
                         ))}
                       </div>
@@ -251,6 +261,7 @@ export const MainSportsbook = () => {
                           key={game.id} 
                           game={game} 
                           onBetSelect={handleBetSelect}
+                          selectedKeys={selectedKeys}
                         />
                       ))}
                     </div>
@@ -265,6 +276,7 @@ export const MainSportsbook = () => {
                       key={game.id} 
                       game={game} 
                       onBetSelect={handleBetSelect}
+                      selectedKeys={selectedKeys}
                     />
                   ))}
                 </div>
@@ -277,6 +289,7 @@ export const MainSportsbook = () => {
                       key={game.id} 
                       game={game} 
                       onBetSelect={handleBetSelect}
+                      selectedKeys={selectedKeys}
                     />
                   ))}
                 </div>
@@ -289,6 +302,7 @@ export const MainSportsbook = () => {
                       key={game.id} 
                       game={game} 
                       onBetSelect={handleBetSelect}
+                      selectedKeys={selectedKeys}
                     />
                   ))}
                 </div>

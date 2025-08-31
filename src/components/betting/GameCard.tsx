@@ -1,4 +1,4 @@
-import { useState } from "react";
+// React import not needed as we avoid local state here
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -34,10 +34,11 @@ interface Game {
 interface GameCardProps {
   game: Game;
   onBetSelect: (bet: any) => void;
+  selectedKeys: Set<string>;
 }
 
-export const GameCard = ({ game, onBetSelect }: GameCardProps) => {
-  const [selectedBets, setSelectedBets] = useState<Set<string>>(new Set());
+export const GameCard = ({ game, onBetSelect, selectedKeys }: GameCardProps) => {
+  // Selection state is controlled by parent via selectedKeys
 
   const formatOdds = (odds: number) => {
     return odds > 0 ? `+${odds}` : odds.toString();
@@ -52,31 +53,23 @@ export const GameCard = ({ game, onBetSelect }: GameCardProps) => {
     });
   };
 
-  const handleBetClick = (betType: string, selection: string, odds: number) => {
-    const betId = `${game.id}-${betType}-${selection}`;
-    const newSelected = new Set(selectedBets);
-    
-    if (newSelected.has(betId)) {
-      newSelected.delete(betId);
-    } else {
-      newSelected.add(betId);
-    }
-    
-    setSelectedBets(newSelected);
-    
-    onBetSelect({
-      gameId: game.id,
-      game: `${game.awayTeam.name} @ ${game.homeTeam.name}`,
-      betType,
-      selection,
-      odds,
-      isSelected: !selectedBets.has(betId)
-    });
-  };
+const handleBetClick = (betType: string, selection: string, odds: number) => {
+  const betId = `${game.id}-${betType}-${selection}`;
+  const currentlySelected = selectedKeys.has(betId);
 
-  const isBetSelected = (betType: string, selection: string) => {
-    return selectedBets.has(`${game.id}-${betType}-${selection}`);
-  };
+  onBetSelect({
+    gameId: game.id,
+    game: `${game.awayTeam.name} @ ${game.homeTeam.name}`,
+    betType,
+    selection,
+    odds,
+    isSelected: !currentlySelected,
+  });
+};
+
+const isBetSelected = (betType: string, selection: string) => {
+  return selectedKeys.has(`${game.id}-${betType}-${selection}`);
+};
 
   return (
     <Card className="p-4 space-y-4 hover:shadow-lg transition-shadow bg-card border-border">
