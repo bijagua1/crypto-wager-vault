@@ -65,9 +65,22 @@ const sportsData: SportCategory[] = [
   }
 ];
 
-export const SportsNav = ({ className }: { className?: string }) => {
-  const [selectedSport, setSelectedSport] = useState<string>("soccer");
-  const [expandedSports, setExpandedSports] = useState<Set<string>>(new Set(["soccer"]));
+interface SportsNavProps {
+  className?: string;
+  selectedSport?: string;
+  selectedLeague?: string;
+  onSportSelect?: (sport: string) => void;
+  onLeagueSelect?: (league: string) => void;
+}
+
+export const SportsNav = ({ 
+  className, 
+  selectedSport = "soccer", 
+  selectedLeague,
+  onSportSelect,
+  onLeagueSelect 
+}: SportsNavProps) => {
+  const [expandedSports, setExpandedSports] = useState<Set<string>>(new Set([selectedSport]));
 
   const toggleExpanded = (sportId: string) => {
     const newExpanded = new Set(expandedSports);
@@ -124,7 +137,7 @@ export const SportsNav = ({ className }: { className?: string }) => {
                   isSelected && "bg-primary/10 text-primary border-primary/20"
                 )}
                 onClick={() => {
-                  setSelectedSport(sport.id);
+                  onSportSelect?.(sport.id);
                   toggleExpanded(sport.id);
                 }}
               >
@@ -151,9 +164,15 @@ export const SportsNav = ({ className }: { className?: string }) => {
                   {sport.leagues.map((league) => (
                     <Button
                       key={league}
-                      variant="ghost"
+                      variant={selectedLeague === league ? "secondary" : "ghost"}
                       size="sm"
-                      className="w-full justify-start text-sm text-muted-foreground hover:text-foreground"
+                      className={cn(
+                        "w-full justify-start text-sm",
+                        selectedLeague === league 
+                          ? "bg-primary/10 text-primary" 
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => onLeagueSelect?.(league)}
                     >
                       {league}
                     </Button>

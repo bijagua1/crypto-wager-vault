@@ -109,6 +109,8 @@ export const MainSportsbook = () => {
   const [games, setGames] = useState<typeof sampleGames>([]);
   const [loading, setLoading] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [selectedSport, setSelectedSport] = useState("all");
+  const [selectedLeague, setSelectedLeague] = useState<string>();
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     const fetchOdds = async () => {
@@ -133,6 +135,40 @@ export const MainSportsbook = () => {
   }, [searchParams, activeTab]);
 
   const sourceGames = games.length ? games : sampleGames;
+
+  // Filter games based on selected sport and league
+  const filteredGames = sourceGames.filter(game => {
+    if (selectedSport === "all") return true;
+    
+    // Map sport IDs to league names in our sample data
+    const sportLeagueMap: Record<string, string[]> = {
+      soccer: ["Premier League", "La Liga", "Champions League", "MLS"],
+      basketball: ["NBA", "NCAA", "EuroLeague"],
+      football: ["NFL", "NCAA Football"],
+      baseball: ["MLB", "College Baseball"],
+      tennis: ["ATP", "WTA", "Grand Slams"]
+    };
+    
+    const sportLeagues = sportLeagueMap[selectedSport];
+    if (!sportLeagues) return false;
+    
+    // If no specific league selected, show all games from this sport
+    if (!selectedLeague) {
+      return sportLeagues.includes(game.league);
+    }
+    
+    // Show only games from selected league
+    return game.league === selectedLeague;
+  });
+
+  const handleSportSelect = (sport: string) => {
+    setSelectedSport(sport);
+    setSelectedLeague(undefined); // Reset league when sport changes
+  };
+
+  const handleLeagueSelect = (league: string) => {
+    setSelectedLeague(selectedLeague === league ? undefined : league);
+  };
 
   const handleBetSelect = (bet: any) => {
     setBetSelections(prev => {
@@ -172,10 +208,10 @@ const selectedKeys = new Set(
     .map((s) => `${s.gameId}-${s.betType}-${s.selection}`)
 );
 
-const liveGames = [...sourceGames.filter((game) => game.isLive)].sort(
+const liveGames = [...filteredGames.filter((game) => game.isLive)].sort(
   (a, b) => new Date(a.commenceTime).getTime() - new Date(b.commenceTime).getTime()
 );
-const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
+const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
   (a, b) => new Date(a.commenceTime).getTime() - new Date(b.commenceTime).getTime()
 );
 
@@ -190,7 +226,13 @@ const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
       <div className="flex">
         {/* Left Sidebar - Sports Navigation */}
         {showSidebar && (
-          <SportsNav className="hidden lg:block w-64 h-[calc(100vh-4rem)] sticky top-16" />
+          <SportsNav 
+            className="hidden lg:block w-64 h-[calc(100vh-4rem)] sticky top-16"
+            selectedSport={selectedSport}
+            selectedLeague={selectedLeague}
+            onSportSelect={handleSportSelect}
+            onLeagueSelect={handleLeagueSelect}
+          />
         )}
         
         {/* Main Content */}
@@ -304,7 +346,7 @@ const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
 
               <TabsContent value="popular" className="mt-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  {sourceGames.filter(game => game.popularBet).map(game => (
+                  {filteredGames.filter(game => game.popularBet).map(game => (
                     <GameCard 
                       key={game.id} 
                       game={game} 
