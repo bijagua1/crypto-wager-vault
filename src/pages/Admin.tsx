@@ -114,6 +114,9 @@ const Admin = () => {
       description: `${profile.email}: $${newBalance.toFixed(2)} (${isDeposit ? "+" : "-"}$${amountUSD.toFixed(2)})` 
     });
     
+    // Trigger balance refresh for all components (including Header)
+    window.dispatchEvent(new Event('balance:refresh'));
+    
     setProfile({ ...profile, balance_usd: newBalance });
     setAmountUSD(0);
   };
