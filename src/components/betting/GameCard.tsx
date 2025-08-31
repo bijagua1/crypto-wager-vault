@@ -28,6 +28,7 @@ interface Game {
   awayScore?: number;
   homeOdds: GameOdds;
   awayOdds: GameOdds;
+  drawMoneyline?: number | null;
   popularBet?: string;
 }
 
@@ -157,9 +158,23 @@ const isBetSelected = (betType: string, selection: string) => {
           </div>
         </div>
 
-        {/* VS Divider */}
-        <div className="flex items-center justify-center">
+        {/* VS Divider + Draw */}
+        <div className="flex items-center justify-center gap-2">
           <div className="text-xs text-muted-foreground font-medium">VS</div>
+          {typeof game.drawMoneyline === 'number' && game.drawMoneyline !== 0 && (
+            <Button
+              size="sm"
+              variant={isBetSelected("moneyline", "draw") ? "default" : "outline"}
+              className={cn(
+                "text-xs px-2 py-1 h-8",
+                isBetSelected("moneyline", "draw") && "bg-primary text-primary-foreground"
+              )}
+              onClick={() => handleBetClick("moneyline", "draw", game.drawMoneyline as number)}
+              aria-label="Draw odds"
+            >
+              Draw {formatOdds(game.drawMoneyline as number)}
+            </Button>
+          )}
         </div>
 
         {/* Home Team */}

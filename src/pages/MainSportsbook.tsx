@@ -136,7 +136,7 @@ export const MainSportsbook = () => {
           : "soccer_epl"; // fetch real data even when 'all' is selected
 
         const { data, error } = await supabase.functions.invoke("odds-lines", {
-          body: { sport: apiSport, regions: "us", markets: "h2h,spreads,totals" },
+          body: { sport: apiSport, regions: "us,uk,eu", markets: "h2h,spreads,totals" },
         });
         if (!error && data?.games) {
           setGames(data.games);

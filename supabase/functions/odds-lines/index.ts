@@ -38,6 +38,8 @@ function mapEventToGame(evt: any) {
 
   const homeML = h2h?.outcomes?.find((o: any) => o.name === evt.home_team)?.price ?? null;
   const awayML = h2h?.outcomes?.find((o: any) => o.name === evt.away_team)?.price ?? null;
+  const drawOutcome = h2h?.outcomes?.find((o: any) => (o.name || "").toLowerCase() === "draw")
+    || h2h?.outcomes?.find((o: any) => o.name !== evt.home_team && o.name !== evt.away_team);
 
   const homeSpreadOutcome = spreads?.outcomes?.find((o: any) => o.name === evt.home_team);
   const awaySpreadOutcome = spreads?.outcomes?.find((o: any) => o.name === evt.away_team);
@@ -45,13 +47,28 @@ function mapEventToGame(evt: any) {
   const overOutcome = totals?.outcomes?.find((o: any) => (o.name || "").toLowerCase() === "over");
   const underOutcome = totals?.outcomes?.find((o: any) => (o.name || "").toLowerCase() === "under");
 
+  // Friendly league names for filters/UI
+  const key = String(evt.sport_key || "");
+  const leagueMap: Record<string, string> = {
+    soccer_epl: "Premier League",
+    soccer_spain_la_liga: "La Liga",
+    soccer_uefa_champs_league: "Champions League",
+    soccer_usa_mls: "MLS",
+    basketball_nba: "NBA",
+    americanfootball_nfl: "NFL",
+    baseball_mlb: "MLB",
+    tennis_atp_singles: "ATP"
+  };
+  const leagueFriendly = leagueMap[key] || (evt.sport_title || key || "Sports");
+
   return {
     id: String(evt.id),
-    league: evt.sport_title || evt.sport_key || "Sports",
+    league: leagueFriendly,
     homeTeam: { name: evt.home_team, logo: "", record: "" },
     awayTeam: { name: evt.away_team, logo: "", record: "" },
     commenceTime: evt.commence_time,
     isLive: Boolean(evt.inplay || false),
+    drawMoneyline: Number.isFinite(drawOutcome?.price) ? Math.trunc(drawOutcome.price) : null,
     homeOdds: {
       moneyline: Number.isFinite(homeML) ? Math.trunc(homeML) : 0,
       spread: {
