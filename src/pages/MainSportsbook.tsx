@@ -139,10 +139,13 @@ export const MainSportsbook = () => {
           body: { sport: apiSport, regions: "us,uk,eu", markets: "h2h,spreads,totals" },
         });
         if (!error && data?.games) {
+          console.log("Loaded games:", data.games.length);
           setGames(data.games);
         } else {
           console.error("odds-lines error", error || data);
-          setGames([]);
+          // Fallback to sample games when API fails
+          console.log("Using sample games as fallback");
+          setGames(sampleGames);
         }
       } finally {
         setLoading(false);

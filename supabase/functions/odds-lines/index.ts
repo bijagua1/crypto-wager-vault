@@ -103,8 +103,13 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log("Edge function started");
+    
     const apiKey = Deno.env.get("ODDS_API_KEY");
+    console.log("API key exists:", !!apiKey);
+    
     if (!apiKey) {
+      console.log("ERROR: Missing ODDS_API_KEY");
       return new Response(JSON.stringify({ error: "Missing ODDS_API_KEY" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -112,6 +117,7 @@ Deno.serve(async (req) => {
     }
 
     const { sport = "basketball_nba", regions = "us", markets = "h2h,spreads,totals" } = await req.json().catch(() => ({}));
+    console.log("Request params:", { sport, regions, markets });
 
     const url = new URL(`https://api.the-odds-api.com/v4/sports/${sport}/odds/`);
     url.searchParams.set("apiKey", apiKey);
@@ -120,9 +126,14 @@ Deno.serve(async (req) => {
     url.searchParams.set("oddsFormat", "american");
     url.searchParams.set("dateFormat", "iso");
 
+    console.log("Fetching from URL:", url.toString().replace(apiKey, "***"));
+    
     const resp = await fetch(url.toString());
+    console.log("API response status:", resp.status);
+    
     if (!resp.ok) {
       const txt = await resp.text();
+      console.log("API error response:", txt);
       return new Response(JSON.stringify({ error: "Upstream error", details: txt }), {
         status: resp.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -130,13 +141,17 @@ Deno.serve(async (req) => {
     }
 
     const data = await resp.json();
+    console.log("API response data length:", Array.isArray(data) ? data.length : "not array");
+    
     const games = Array.isArray(data) ? data.map(mapEventToGame) : [];
+    console.log("Processed games count:", games.length);
 
     return new Response(JSON.stringify({ games, count: games.length }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("Edge function error:", err);
     return new Response(JSON.stringify({ error: "Unexpected error", details: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
