@@ -8,20 +8,58 @@ import { supabase } from "@/integrations/supabase/client";
 export const Header = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [balance] = useState(1247.5);
+  const [balanceUSD, setBalanceUSD] = useState<number>(0);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsLoggedIn(Boolean(session?.user));
+      if (session?.user) {
+        const userId = session.user.id;
+        // Defer Supabase calls to avoid deadlocks
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('balance_usd')
+            .eq('id', userId)
+            .maybeSingle();
+          setBalanceUSD(profile?.balance_usd ?? 0);
+
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId);
+          setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
+        }, 0);
+      } else {
+        setBalanceUSD(0);
+        setIsAdmin(false);
+      }
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(Boolean(session?.user));
+      if (session?.user) {
+        const userId = session.user.id;
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('balance_usd')
+            .eq('id', userId)
+            .maybeSingle();
+          setBalanceUSD(profile?.balance_usd ?? 0);
+
+          const { data: roles } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId);
+          setIsAdmin(!!roles?.some((r: any) => r.role === 'admin'));
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
@@ -54,8 +92,13 @@ export const Header = () => {
               {/* Balance Display */}
               <div className="hidden sm:flex items-center gap-2 bg-card px-3 py-2 rounded-lg border">
                 <Wallet className="h-4 w-4 text-crypto-green" />
-                <span className="text-sm font-medium text-foreground">${balance.toLocaleString()}</span>
+                <span className="text-sm font-medium text-foreground">${balanceUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
+              {isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => navigate('/admin')}>
+                  Admin
+                </Button>
+              )}
               {/* User Menu */}
               <Button variant="ghost" size="sm">
                 <User className="h-4 w-4" />

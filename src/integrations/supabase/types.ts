@@ -14,16 +14,190 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bet_selections: {
+        Row: {
+          bet_id: string
+          created_at: string
+          game_id: string
+          id: string
+          league: string | null
+          market: string | null
+          odds: number
+          selection: string
+        }
+        Insert: {
+          bet_id: string
+          created_at?: string
+          game_id: string
+          id?: string
+          league?: string | null
+          market?: string | null
+          odds: number
+          selection: string
+        }
+        Update: {
+          bet_id?: string
+          created_at?: string
+          game_id?: string
+          id?: string
+          league?: string | null
+          market?: string | null
+          odds?: number
+          selection?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bet_selections_bet_id_fkey"
+            columns: ["bet_id"]
+            isOneToOne: false
+            referencedRelation: "bets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bets: {
+        Row: {
+          created_at: string
+          id: string
+          potential_payout_btc: number
+          potential_payout_usd: number
+          stake_btc: number
+          stake_usd: number
+          status: Database["public"]["Enums"]["bet_status"]
+          type: Database["public"]["Enums"]["bet_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          potential_payout_btc?: number
+          potential_payout_usd?: number
+          stake_btc?: number
+          stake_usd?: number
+          status?: Database["public"]["Enums"]["bet_status"]
+          type: Database["public"]["Enums"]["bet_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          potential_payout_btc?: number
+          potential_payout_usd?: number
+          stake_btc?: number
+          stake_usd?: number
+          status?: Database["public"]["Enums"]["bet_status"]
+          type?: Database["public"]["Enums"]["bet_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          balance_btc: number
+          balance_usd: number
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          balance_btc?: number
+          balance_usd?: number
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          balance_btc?: number
+          balance_usd?: number
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount_btc: number | null
+          amount_usd: number | null
+          created_at: string
+          id: string
+          note: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Insert: {
+          amount_btc?: number | null
+          amount_usd?: number | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          type: Database["public"]["Enums"]["transaction_type"]
+          user_id: string
+        }
+        Update: {
+          amount_btc?: number | null
+          amount_usd?: number | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      bet_status: "pending" | "approved" | "rejected" | "settled" | "void"
+      bet_type: "single" | "parlay"
+      transaction_type:
+        | "deposit"
+        | "withdrawal"
+        | "bet_place"
+        | "bet_settle"
+        | "adjustment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +324,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      bet_status: ["pending", "approved", "rejected", "settled", "void"],
+      bet_type: ["single", "parlay"],
+      transaction_type: [
+        "deposit",
+        "withdrawal",
+        "bet_place",
+        "bet_settle",
+        "adjustment",
+      ],
+    },
   },
 } as const

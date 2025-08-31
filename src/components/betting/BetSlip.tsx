@@ -7,7 +7,8 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { X, Plus, TrendingUp, Bitcoin, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 interface BetSelection {
   gameId: string;
   game: string;
@@ -29,6 +30,8 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
   const [stakes, setStakes] = useState<Record<string, number>>({});
   const [parlayStake, setParlayStake] = useState<number>(0);
   const [currency, setCurrency] = useState<"USD" | "BTC">("USD");
+  const { toast } = useToast();
+  const [isPlacing, setIsPlacing] = useState(false);
 
   const quickStakes = [10, 25, 50, 100, 250, 500];
   
@@ -86,6 +89,88 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
       setBetType("single");
     }
   }, [activeSelections.length, betType]);
+
+  const handlePlaceBet = async () => {
+    try {
+      setIsPlacing(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) {
+        toast({ title: "Please log in", description: "You must be logged in to place a bet." });
+        return;
+      }
+
+      if (betType === 'single') {
+        const singles = activeSelections.map(sel => {
+          const key = `${sel.gameId}-${sel.betType}-${sel.selection}`;
+          const stake = stakes[key] || 0;
+          return { sel, stake };
+        }).filter(s => s.stake > 0);
+        if (singles.length === 0) return;
+        for (const { sel, stake } of singles) {
+          const payout = calculateSinglePayout(sel.odds, stake);
+          const insertBet: any = {
+            user_id: userId,
+            type: 'single',
+            status: 'pending',
+            stake_usd: currency === 'USD' ? stake : 0,
+            stake_btc: currency === 'BTC' ? stake : 0,
+            potential_payout_usd: currency === 'USD' ? Number(payout.toFixed(2)) : 0,
+            potential_payout_btc: currency === 'BTC' ? Number(payout.toFixed(8)) : 0,
+          };
+          const { data: bet, error } = await supabase
+            .from('bets')
+            .insert(insertBet)
+            .select('id')
+            .maybeSingle();
+          if (error || !bet) throw error || new Error('Failed to create bet');
+          await supabase.from('bet_selections').insert({
+            bet_id: (bet as any).id,
+            game_id: sel.gameId,
+            league: sel.game,
+            market: sel.betType,
+            selection: sel.selection,
+            odds: sel.odds
+          });
+        }
+      } else {
+        const payout = calculateParlayPayout();
+        const insertBet: any = {
+          user_id: userId,
+          type: 'parlay',
+          status: 'pending',
+          stake_usd: currency === 'USD' ? parlayStake : 0,
+          stake_btc: currency === 'BTC' ? parlayStake : 0,
+          potential_payout_usd: currency === 'USD' ? Number(payout.toFixed(2)) : 0,
+          potential_payout_btc: currency === 'BTC' ? Number(payout.toFixed(8)) : 0,
+        };
+        const { data: bet, error } = await supabase
+          .from('bets')
+          .insert(insertBet)
+          .select('id')
+          .maybeSingle();
+        if (error || !bet) throw error || new Error('Failed to create parlay');
+        const legs = activeSelections.map(sel => ({
+          bet_id: (bet as any).id,
+          game_id: sel.gameId,
+          league: sel.game,
+          market: sel.betType,
+          selection: sel.selection,
+          odds: sel.odds
+        }));
+        await supabase.from('bet_selections').insert(legs);
+      }
+
+      toast({ title: "Bet submitted", description: "Awaiting admin approval." });
+      setStakes({});
+      setParlayStake(0);
+      onClearAll();
+    } catch (e: any) {
+      toast({ title: "Bet failed", description: e.message || "Please try again.", variant: "destructive" as any });
+    } finally {
+      setIsPlacing(false);
+    }
+  };
 
   if (activeSelections.length === 0) {
     return (
@@ -330,12 +415,14 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
         <Button 
           className="w-full bg-primary hover:bg-primary/90" 
           size="lg"
+          onClick={handlePlaceBet}
           disabled={
+            isPlacing ||
             (betType === "single" && Object.values(stakes).every(stake => stake === 0)) ||
             (betType === "parlay" && (parlayStake === 0 || activeSelections.length < 2))
           }
         >
-          Place Bet
+          {isPlacing ? "Placing..." : "Place Bet"}
           {betType === "parlay" && parlayStake > 0 && (
             <span className="ml-2">
               {formatCurrency(parlayStake)}
