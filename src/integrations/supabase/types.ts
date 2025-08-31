@@ -219,6 +219,8 @@ export type Database = {
         | "bet_place"
         | "bet_settle"
         | "adjustment"
+        | "bet_stake"
+        | "bet_payout"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -355,6 +357,8 @@ export const Constants = {
         "bet_place",
         "bet_settle",
         "adjustment",
+        "bet_stake",
+        "bet_payout",
       ],
     },
   },
