@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CryptoBetsLogo } from "./CryptoBetsLogo";
+import { Link } from "react-router-dom";
 import { 
   Twitter, 
   MessageCircle, 
@@ -33,20 +34,20 @@ export const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Sports</h3>
             <div className="space-y-2">
-              <Button variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
-                Soccer Betting
+              <Button asChild variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                <Link to="/?tab=all&sport=soccer">Soccer Betting</Link>
               </Button>
-              <Button variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
-                Basketball Betting
+              <Button asChild variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                <Link to="/?tab=all&sport=basketball">Basketball Betting</Link>
               </Button>
-              <Button variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
-                NFL Betting
+              <Button asChild variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                <Link to="/?tab=all&sport=football">NFL Betting</Link>
               </Button>
-              <Button variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
-                Baseball Betting
+              <Button asChild variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                <Link to="/?tab=all&sport=baseball">Baseball Betting</Link>
               </Button>
-              <Button variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
-                Tennis Betting
+              <Button asChild variant="link" className="p-0 h-auto text-sm text-muted-foreground hover:text-foreground">
+                <Link to="/?tab=all&sport=tennis">Tennis Betting</Link>
               </Button>
             </div>
           </div>

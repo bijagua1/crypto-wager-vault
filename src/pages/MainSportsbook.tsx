@@ -128,11 +128,16 @@ export const MainSportsbook = () => {
     fetchOdds();
   }, []);
 
-  // Sync tab with URL ?tab=
+  // Sync tab, sport, and league with URL params
   useEffect(() => {
     const tabParam = (searchParams.get("tab") || "all").toLowerCase();
     if (tabParam !== activeTab) setActiveTab(tabParam);
-  }, [searchParams, activeTab]);
+
+    const sportParam = (searchParams.get("sport") || "all").toLowerCase();
+    const leagueParam = searchParams.get("league") || undefined;
+    if (sportParam !== selectedSport) setSelectedSport(sportParam);
+    if (leagueParam !== selectedLeague) setSelectedLeague(leagueParam);
+  }, [searchParams]);
 
   const sourceGames = games.length ? games : sampleGames;
 
@@ -164,10 +169,26 @@ export const MainSportsbook = () => {
   const handleSportSelect = (sport: string) => {
     setSelectedSport(sport);
     setSelectedLeague(undefined); // Reset league when sport changes
+    const params = new URLSearchParams(searchParams);
+    if (sport === "all") {
+      params.delete("sport");
+    } else {
+      params.set("sport", sport);
+    }
+    params.delete("league");
+    setSearchParams(params);
   };
 
   const handleLeagueSelect = (league: string) => {
-    setSelectedLeague(selectedLeague === league ? undefined : league);
+    const params = new URLSearchParams(searchParams);
+    if (selectedLeague === league) {
+      setSelectedLeague(undefined);
+      params.delete("league");
+    } else {
+      setSelectedLeague(league);
+      params.set("league", league);
+    }
+    setSearchParams(params);
   };
 
   const handleBetSelect = (bet: any) => {
@@ -227,7 +248,7 @@ const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
         {/* Left Sidebar - Sports Navigation */}
         {showSidebar && (
           <SportsNav 
-            className="hidden lg:block w-64 h-[calc(100vh-4rem)] sticky top-16"
+            className="hidden lg:block w-64 sticky top-16 self-start"
             selectedSport={selectedSport}
             selectedLeague={selectedLeague}
             onSportSelect={handleSportSelect}
@@ -265,7 +286,7 @@ const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
 
           {/* Game Filters */}
           <div className="mb-6">
-            <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); if (value === "all") setSearchParams({}); else setSearchParams({ tab: value }); }}>
+            <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); const params = new URLSearchParams(searchParams); if (value === "all") { params.delete("tab"); } else { params.set("tab", value); } setSearchParams(params); }}>
               <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
                 <TabsTrigger value="all" className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
@@ -288,15 +309,54 @@ const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
               </TabsList>
 
               <TabsContent value="all" className="mt-6">
-                <div className="space-y-4">
-                  {liveGames.length > 0 && (
+                {liveGames.length === 0 && upcomingGames.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 border rounded-lg bg-muted/20">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      No games available for the selected filters.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedSport("all");
+                        setSelectedLeague(undefined);
+                        const params = new URLSearchParams(searchParams);
+                        params.delete("sport");
+                        params.delete("league");
+                        setSearchParams(params);
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {liveGames.length > 0 && (
+                      <div>
+                        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                          <Zap className="h-5 w-5 text-live" />
+                          Live Games
+                        </h2>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {liveGames.map(game => (
+                            <GameCard 
+                              key={game.id} 
+                              game={game} 
+                              onBetSelect={handleBetSelect}
+                              selectedKeys={selectedKeys}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
                     <div>
                       <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <Zap className="h-5 w-5 text-live" />
-                        Live Games
+                        <Clock className="h-5 w-5 text-muted-foreground" />
+                        Upcoming Games
                       </h2>
                       <div className="grid gap-4 md:grid-cols-2">
-                        {liveGames.map(game => (
+                        {upcomingGames.map(game => (
                           <GameCard 
                             key={game.id} 
                             game={game} 
@@ -306,38 +366,27 @@ const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
                         ))}
                       </div>
                     </div>
-                  )}
-                  
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-muted-foreground" />
-                      Upcoming Games
-                    </h2>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {upcomingGames.map(game => (
-                        <GameCard 
-                          key={game.id} 
-                          game={game} 
-                          onBetSelect={handleBetSelect}
-                          selectedKeys={selectedKeys}
-                        />
-                      ))}
-                    </div>
                   </div>
-                </div>
+                )}
               </TabsContent>
 
               <TabsContent value="live" className="mt-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {liveGames.map(game => (
-                    <GameCard 
-                      key={game.id} 
-                      game={game} 
-                      onBetSelect={handleBetSelect}
-                      selectedKeys={selectedKeys}
-                    />
-                  ))}
-                </div>
+                {liveGames.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 border rounded-lg bg-muted/20">
+                    <p className="text-sm text-muted-foreground">No live games right now.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {liveGames.map(game => (
+                      <GameCard 
+                        key={game.id} 
+                        game={game} 
+                        onBetSelect={handleBetSelect}
+                        selectedKeys={selectedKeys}
+                      />
+                    ))}
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="today" className="mt-6">
@@ -363,7 +412,7 @@ const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
         {/* Right Sidebar - Bet Slip */}
         {betSelections.some((s) => s.isSelected) && (
           <BetSlip 
-            className="hidden lg:block w-80 h-[calc(100vh-4rem)] sticky top-16 m-4 ml-0"
+            className="hidden lg:block w-80 sticky top-16 m-4 ml-0 self-start"
             selections={betSelections}
             onRemoveSelection={handleRemoveSelection}
             onClearAll={handleClearAll}
