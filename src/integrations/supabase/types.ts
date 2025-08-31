@@ -96,8 +96,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          balance_btc: number
-          balance_usd: number
           created_at: string
           display_name: string | null
           email: string | null
@@ -105,8 +103,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          balance_btc?: number
-          balance_usd?: number
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -114,8 +110,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          balance_btc?: number
-          balance_usd?: number
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -150,6 +144,33 @@ export type Database = {
           id?: string
           note?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_balances: {
+        Row: {
+          balance_btc: number
+          balance_usd: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance_btc?: number
+          balance_usd?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance_btc?: number
+          balance_usd?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
