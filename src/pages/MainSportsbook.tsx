@@ -107,6 +107,7 @@ export const MainSportsbook = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [games, setGames] = useState<typeof sampleGames>([]);
   const [loading, setLoading] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   useEffect(() => {
     const fetchOdds = async () => {
@@ -176,13 +177,20 @@ const liveGames = [...sourceGames.filter((game) => game.isLive)].sort(
 const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
   (a, b) => new Date(a.commenceTime).getTime() - new Date(b.commenceTime).getTime()
 );
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+      <div className="container px-4 pt-2">
+        <Button variant="ghost" size="sm" onClick={() => setShowSidebar((v) => !v)}>
+          {showSidebar ? "Hide Sports" : "Show Sports"}
+        </Button>
+      </div>
       <div className="flex">
         {/* Left Sidebar - Sports Navigation */}
-        <SportsNav className="hidden lg:block w-64 h-[calc(100vh-4rem)] sticky top-16" />
+        {showSidebar && (
+          <SportsNav className="hidden lg:block w-64 h-[calc(100vh-4rem)] sticky top-16" />
+        )}
         
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-6">
@@ -319,12 +327,14 @@ const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
         </main>
 
         {/* Right Sidebar - Bet Slip */}
-        <BetSlip 
-          className="hidden lg:block w-80 h-[calc(100vh-4rem)] sticky top-16 m-4 ml-0"
-          selections={betSelections}
-          onRemoveSelection={handleRemoveSelection}
-          onClearAll={handleClearAll}
-        />
+        {betSelections.some((s) => s.isSelected) && (
+          <BetSlip 
+            className="hidden lg:block w-80 h-[calc(100vh-4rem)] sticky top-16 m-4 ml-0"
+            selections={betSelections}
+            onRemoveSelection={handleRemoveSelection}
+            onClearAll={handleClearAll}
+          />
+        )}
       </div>
       
       {/* Mobile Bet Slip */}
