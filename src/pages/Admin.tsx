@@ -71,15 +71,39 @@ const Admin = () => {
   }, []);
 
   const searchProfileByEmail = async () => {
-    const { data, error } = await supabase
+    const { data: profiles, error: profileError } = await supabase
       .from("profiles")
-      .select("id, email, display_name, balance_usd, balance_btc")
+      .select("id, email, display_name")
       .ilike("email", emailQuery.trim());
-    if (error) {
-      toast({ title: "Search failed", description: error.message, variant: "destructive" as any });
+    
+    if (profileError) {
+      toast({ title: "Search failed", description: profileError.message, variant: "destructive" as any });
       return;
     }
-    setProfile((data || [])[0] || null);
+
+    const foundProfile = (profiles || [])[0];
+    if (!foundProfile) {
+      setProfile(null);
+      return;
+    }
+
+    // Get balance information from user_balances table
+    const { data: balance, error: balanceError } = await supabase
+      .from("user_balances")
+      .select("balance_usd, balance_btc")
+      .eq("user_id", foundProfile.id)
+      .maybeSingle();
+
+    if (balanceError) {
+      toast({ title: "Balance fetch failed", description: balanceError.message, variant: "destructive" as any });
+      return;
+    }
+
+    setProfile({
+      ...foundProfile,
+      balance_usd: balance?.balance_usd ?? 0,
+      balance_btc: balance?.balance_btc ?? 0
+    });
   };
 
   const processTransaction = async () => {
@@ -91,9 +115,9 @@ const Admin = () => {
       : Math.max(0, Number((profile.balance_usd - amountUSD).toFixed(2)));
     
     const { error } = await supabase
-      .from("profiles")
+      .from("user_balances")
       .update({ balance_usd: newBalance })
-      .eq("id", profile.id);
+      .eq("user_id", profile.id);
     
     if (error) {
       toast({ title: "Update failed", description: error.message, variant: "destructive" as any });

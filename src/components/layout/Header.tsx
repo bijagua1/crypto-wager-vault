@@ -18,12 +18,12 @@ export const Header = () => {
         const userId = session.user.id;
         // Defer Supabase calls to avoid deadlocks
         setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
+          const { data: balance } = await supabase
+            .from('user_balances')
             .select('balance_usd')
-            .eq('id', userId)
+            .eq('user_id', userId)
             .maybeSingle();
-          setBalanceUSD(profile?.balance_usd ?? 0);
+          setBalanceUSD(balance?.balance_usd ?? 0);
 
           const { data: roles } = await supabase
             .from('user_roles')
@@ -42,12 +42,12 @@ export const Header = () => {
       if (session?.user) {
         const userId = session.user.id;
         setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
+          const { data: balance } = await supabase
+            .from('user_balances')
             .select('balance_usd')
-            .eq('id', userId)
+            .eq('user_id', userId)
             .maybeSingle();
-          setBalanceUSD(profile?.balance_usd ?? 0);
+          setBalanceUSD(balance?.balance_usd ?? 0);
 
           const { data: roles } = await supabase
             .from('user_roles')
@@ -63,12 +63,12 @@ export const Header = () => {
       const { data: sessionRes } = await supabase.auth.getSession();
       const userId = sessionRes.session?.user?.id;
       if (!userId) return;
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: balance } = await supabase
+        .from('user_balances')
         .select('balance_usd')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .maybeSingle();
-      setBalanceUSD(profile?.balance_usd ?? 0);
+      setBalanceUSD(balance?.balance_usd ?? 0);
     };
 
     const onBalanceRefresh = () => { refreshBalance(); };
