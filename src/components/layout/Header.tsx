@@ -1,12 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Menu, User, Wallet } from "lucide-react";
 import { CryptoBetsLogo } from "./CryptoBetsLogo";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Header = () => {
+  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [balance] = useState(1247.50);
+  const [balance] = useState(1247.5);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(Boolean(session?.user));
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(Boolean(session?.user));
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -16,23 +34,17 @@ export const Header = () => {
           <Button variant="ghost" size="sm" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
-          <CryptoBetsLogo />
+          <Link to="/">
+            <CryptoBetsLogo />
+          </Link>
         </div>
 
         {/* Center: Navigation (Desktop) */}
         <nav className="hidden md:flex items-center gap-6">
-          <Button variant="ghost" className="text-foreground hover:text-primary">
-            Sports
-          </Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary">
-            Live Betting
-          </Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary">
-            My Bets
-          </Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary">
-            Promotions
-          </Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>Sports</Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>Live Betting</Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>My Bets</Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary" onClick={() => navigate("/")}>Promotions</Button>
         </nav>
 
         {/* Right: User Actions */}
@@ -42,24 +54,18 @@ export const Header = () => {
               {/* Balance Display */}
               <div className="hidden sm:flex items-center gap-2 bg-card px-3 py-2 rounded-lg border">
                 <Wallet className="h-4 w-4 text-crypto-green" />
-                <span className="text-sm font-medium text-foreground">
-                  ${balance.toLocaleString()}
-                </span>
+                <span className="text-sm font-medium text-foreground">${balance.toLocaleString()}</span>
               </div>
-              
               {/* User Menu */}
               <Button variant="ghost" size="sm">
                 <User className="h-4 w-4" />
               </Button>
+              <Button size="sm" variant="outline" onClick={handleLogout}>Log out</Button>
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setIsLoggedIn(true)}>
-                Login
-              </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary/90">
-                Sign Up
-              </Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Login</Button>
+              <Button size="sm" className="bg-primary hover:bg-primary/90" onClick={() => navigate("/auth?mode=signup")}>Sign Up</Button>
             </div>
           )}
         </div>
@@ -69,10 +75,10 @@ export const Header = () => {
       <div className="md:hidden border-t border-border bg-card">
         <div className="container px-4 py-2">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm">Sports</Button>
-            <Button variant="ghost" size="sm">Live</Button>
-            <Button variant="ghost" size="sm">My Bets</Button>
-            <Button variant="ghost" size="sm">Wallet</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>Sports</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>Live</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>My Bets</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>Wallet</Button>
           </div>
         </div>
       </div>

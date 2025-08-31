@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { SportsNav } from "@/components/layout/SportsNav";
 import { Footer } from "@/components/layout/Footer";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap, TrendingUp, Users, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Sample game data
 const sampleGames = [
@@ -103,6 +104,26 @@ interface BetSelection {
 export const MainSportsbook = () => {
   const [betSelections, setBetSelections] = useState<BetSelection[]>([]);
   const [activeTab, setActiveTab] = useState("all");
+  const [games, setGames] = useState<typeof sampleGames>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchOdds = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.functions.invoke("odds-lines", {
+        body: { sport: "basketball_nba", regions: "us", markets: "h2h,spreads,totals" },
+      });
+      if (!error && data?.games) {
+        setGames(data.games);
+      } else {
+        console.error("odds-lines error", error || data);
+      }
+      setLoading(false);
+    };
+    fetchOdds();
+  }, []);
+
+  const sourceGames = games.length ? games : sampleGames;
 
   const handleBetSelect = (bet: any) => {
     setBetSelections(prev => {
@@ -136,8 +157,8 @@ export const MainSportsbook = () => {
     setBetSelections([]);
   };
 
-  const liveGames = sampleGames.filter(game => game.isLive);
-  const upcomingGames = sampleGames.filter(game => !game.isLive);
+  const liveGames = sourceGames.filter(game => game.isLive);
+  const upcomingGames = sourceGames.filter(game => !game.isLive);
 
   return (
     <div className="min-h-screen bg-background">
@@ -251,7 +272,7 @@ export const MainSportsbook = () => {
 
               <TabsContent value="today" className="mt-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  {sampleGames.map(game => (
+                  {sourceGames.map(game => (
                     <GameCard 
                       key={game.id} 
                       game={game} 
@@ -263,7 +284,7 @@ export const MainSportsbook = () => {
 
               <TabsContent value="popular" className="mt-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  {sampleGames.filter(game => game.popularBet).map(game => (
+                  {sourceGames.filter(game => game.popularBet).map(game => (
                     <GameCard 
                       key={game.id} 
                       game={game} 
