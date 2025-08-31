@@ -8,8 +8,8 @@ import { BetSlip } from "@/components/betting/BetSlip";
 import { MobileBetSlip } from "@/components/ui/mobile-bet-slip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Zap, TrendingUp, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MyBets } from "@/components/betting/MyBets";
 
@@ -112,6 +112,7 @@ export const MainSportsbook = () => {
   const [selectedSport, setSelectedSport] = useState("all");
   const [selectedLeague, setSelectedLeague] = useState<string>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [usedFallback, setUsedFallback] = useState(false);
   useEffect(() => {
     const fetchOdds = async () => {
       setLoading(true);
@@ -136,16 +137,18 @@ export const MainSportsbook = () => {
           : "soccer_epl"; // fetch real data even when 'all' is selected
 
         const { data, error } = await supabase.functions.invoke("odds-lines", {
-          body: { sport: apiSport, regions: "us,uk,eu", markets: "h2h,spreads,totals" },
+          body: { sport: apiSport, regions: "us", markets: "h2h,spreads,totals" },
         });
         if (!error && data?.games) {
           console.log("Loaded games:", data.games.length);
           setGames(data.games);
+          setUsedFallback(false);
         } else {
           console.error("odds-lines error", error || data);
           // Fallback to sample games when API fails
           console.log("Using sample games as fallback");
           setGames(sampleGames);
+          setUsedFallback(true);
         }
       } finally {
         setLoading(false);
