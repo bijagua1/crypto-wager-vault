@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Zap, TrendingUp, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { MyBets } from "@/components/betting/MyBets";
 
