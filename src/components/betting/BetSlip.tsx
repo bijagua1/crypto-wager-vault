@@ -100,19 +100,41 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
         return;
       }
 
+      // Get user's current balance
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("balance_usd, balance_btc")
+        .eq("id", userId)
+        .single();
+
+      if (profileError) {
+        throw new Error("Failed to check balance");
+      }
+
       if (betType === 'single') {
         const singles = activeSelections.map(sel => {
           const key = `${sel.gameId}-${sel.betType}-${sel.selection}`;
           const stake = stakes[key] || 0;
           return { sel, stake };
         }).filter(s => s.stake > 0);
+        
         if (singles.length === 0) return;
+
+        // Calculate total stake for all single bets
+        const totalStake = singles.reduce((sum, { stake }) => sum + stake, 0);
+        const userBalance = currency === 'USD' ? profile.balance_usd : profile.balance_btc;
+        
+        if (userBalance < totalStake) {
+          throw new Error(`Insufficient ${currency} balance. You have ${currency === "USD" ? "$" : "₿"}${userBalance.toFixed(currency === "USD" ? 2 : 6)}, but need ${currency === "USD" ? "$" : "₿"}${totalStake.toFixed(currency === "USD" ? 2 : 6)}`);
+        }
+
+        // Place all single bets
         for (const { sel, stake } of singles) {
           const payout = calculateSinglePayout(sel.odds, stake);
           const insertBet: any = {
             user_id: userId,
             type: 'single',
-            status: 'pending',
+            status: 'approved',
             stake_usd: currency === 'USD' ? stake : 0,
             stake_btc: currency === 'BTC' ? stake : 0,
             potential_payout_usd: currency === 'USD' ? Number(payout.toFixed(2)) : 0,
@@ -124,6 +146,7 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
             .select('id')
             .maybeSingle();
           if (error || !bet) throw error || new Error('Failed to create bet');
+          
           await supabase.from('bet_selections').insert({
             bet_id: (bet as any).id,
             game_id: sel.gameId,
@@ -133,12 +156,36 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
             odds: sel.odds
           });
         }
+
+        // Deduct total stake from balance
+        const newBalance = currency === "USD" 
+          ? { balance_usd: profile.balance_usd - totalStake }
+          : { balance_btc: profile.balance_btc - totalStake };
+
+        await supabase.from("profiles").update(newBalance).eq("id", userId);
+
+        // Record transaction
+        await supabase.from("transactions").insert({
+          user_id: userId,
+          type: "bet_place",
+          amount_usd: currency === "USD" ? -totalStake : 0,
+          amount_btc: currency === "BTC" ? -totalStake : 0,
+          note: `${singles.length} single bet(s)`,
+        });
+
       } else {
+        // Parlay bet
+        const userBalance = currency === 'USD' ? profile.balance_usd : profile.balance_btc;
+        
+        if (userBalance < parlayStake) {
+          throw new Error(`Insufficient ${currency} balance. You have ${currency === "USD" ? "$" : "₿"}${userBalance.toFixed(currency === "USD" ? 2 : 6)}, but need ${currency === "USD" ? "$" : "₿"}${parlayStake.toFixed(currency === "USD" ? 2 : 6)}`);
+        }
+
         const payout = calculateParlayPayout();
         const insertBet: any = {
           user_id: userId,
           type: 'parlay',
-          status: 'pending',
+          status: 'approved',
           stake_usd: currency === 'USD' ? parlayStake : 0,
           stake_btc: currency === 'BTC' ? parlayStake : 0,
           potential_payout_usd: currency === 'USD' ? Number(payout.toFixed(2)) : 0,
@@ -150,6 +197,7 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
           .select('id')
           .maybeSingle();
         if (error || !bet) throw error || new Error('Failed to create parlay');
+        
         const legs = activeSelections.map(sel => ({
           bet_id: (bet as any).id,
           game_id: sel.gameId,
@@ -159,14 +207,38 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
           odds: sel.odds
         }));
         await supabase.from('bet_selections').insert(legs);
+
+        // Deduct stake from balance
+        const newBalance = currency === "USD" 
+          ? { balance_usd: profile.balance_usd - parlayStake }
+          : { balance_btc: profile.balance_btc - parlayStake };
+
+        await supabase.from("profiles").update(newBalance).eq("id", userId);
+
+        // Record transaction
+        await supabase.from("transactions").insert({
+          user_id: userId,
+          type: "bet_place",
+          amount_usd: currency === "USD" ? -parlayStake : 0,
+          amount_btc: currency === "BTC" ? -parlayStake : 0,
+          note: `Parlay bet - ${activeSelections.length} selections`,
+        });
       }
 
-      toast({ title: "Bet submitted", description: "Awaiting admin approval." });
+      toast({ 
+        title: "Bet placed successfully!", 
+        description: `Your ${betType} bet has been accepted and balance updated.` 
+      });
+      
       setStakes({});
       setParlayStake(0);
       onClearAll();
     } catch (e: any) {
-      toast({ title: "Bet failed", description: e.message || "Please try again.", variant: "destructive" as any });
+      toast({ 
+        title: "Bet failed", 
+        description: e.message || "Please try again.", 
+        variant: "destructive" as any 
+      });
     } finally {
       setIsPlacing(false);
     }
