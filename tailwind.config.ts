@@ -61,7 +61,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				/* CryptoBets Semantic Colors */
+				crypto: {
+					blue: 'hsl(var(--crypto-blue))',
+					green: 'hsl(var(--crypto-green))',
+					gold: 'hsl(var(--crypto-gold))'
+				},
+				warning: 'hsl(var(--warning))',
+				success: 'hsl(var(--success))',
+				live: 'hsl(var(--live-indicator))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

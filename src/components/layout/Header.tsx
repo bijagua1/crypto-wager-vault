@@ -1,0 +1,81 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Menu, User, Wallet } from "lucide-react";
+import { CryptoBetsLogo } from "./CryptoBetsLogo";
+
+export const Header = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [balance] = useState(1247.50);
+
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between px-4">
+        {/* Left: Logo & Mobile Menu */}
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" className="md:hidden">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <CryptoBetsLogo />
+        </div>
+
+        {/* Center: Navigation (Desktop) */}
+        <nav className="hidden md:flex items-center gap-6">
+          <Button variant="ghost" className="text-foreground hover:text-primary">
+            Sports
+          </Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary">
+            Live Betting
+          </Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary">
+            My Bets
+          </Button>
+          <Button variant="ghost" className="text-foreground hover:text-primary">
+            Promotions
+          </Button>
+        </nav>
+
+        {/* Right: User Actions */}
+        <div className="flex items-center gap-2">
+          {isLoggedIn ? (
+            <>
+              {/* Balance Display */}
+              <div className="hidden sm:flex items-center gap-2 bg-card px-3 py-2 rounded-lg border">
+                <Wallet className="h-4 w-4 text-crypto-green" />
+                <span className="text-sm font-medium text-foreground">
+                  ${balance.toLocaleString()}
+                </span>
+              </div>
+              
+              {/* User Menu */}
+              <Button variant="ghost" size="sm">
+                <User className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setIsLoggedIn(true)}>
+                Login
+              </Button>
+              <Button size="sm" className="bg-primary hover:bg-primary/90">
+                Sign Up
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Navigation */}
+      <div className="md:hidden border-t border-border bg-card">
+        <div className="container px-4 py-2">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm">Sports</Button>
+            <Button variant="ghost" size="sm">Live</Button>
+            <Button variant="ghost" size="sm">My Bets</Button>
+            <Button variant="ghost" size="sm">Wallet</Button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
