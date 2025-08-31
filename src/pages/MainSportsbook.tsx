@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { SportsNav } from "@/components/layout/SportsNav";
 import { Footer } from "@/components/layout/Footer";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Zap, TrendingUp, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useSearchParams } from "react-router-dom";
+import { MyBets } from "@/components/betting/MyBets";
 
 // Sample game data
 const sampleGames = [
@@ -236,7 +237,7 @@ const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="today" className="flex items-center gap-2">
-                  Today
+                  My Bets
                 </TabsTrigger>
                 <TabsTrigger value="popular" className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
@@ -298,16 +299,7 @@ const upcomingGames = [...sourceGames.filter((game) => !game.isLive)].sort(
               </TabsContent>
 
               <TabsContent value="today" className="mt-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {sourceGames.map(game => (
-                    <GameCard 
-                      key={game.id} 
-                      game={game} 
-                      onBetSelect={handleBetSelect}
-                      selectedKeys={selectedKeys}
-                    />
-                  ))}
-                </div>
+                <MyBets />
               </TabsContent>
 
               <TabsContent value="popular" className="mt-6">
