@@ -115,18 +115,47 @@ export const MainSportsbook = () => {
   useEffect(() => {
     const fetchOdds = async () => {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke("odds-lines", {
-        body: { sport: "basketball_nba", regions: "us", markets: "h2h,spreads,totals" },
-      });
-      if (!error && data?.games) {
-        setGames(data.games);
-      } else {
-        console.error("odds-lines error", error || data);
+      try {
+        // Map selected sport/league to the edge function sport key
+        const map: Record<string, Record<string, string>> = {
+          soccer: {
+            "Premier League": "soccer_epl",
+            "La Liga": "soccer_spain_la_liga",
+            "Champions League": "soccer_uefa_champs_league",
+            "MLS": "soccer_usa_mls",
+            default: "soccer_epl",
+          },
+          basketball: { default: "basketball_nba" },
+          football: { default: "americanfootball_nfl" },
+          baseball: { default: "baseball_mlb" },
+          tennis: { default: "tennis_atp_singles" },
+        };
+        const sportMap = map[selectedSport] || undefined;
+        const apiSport = sportMap
+          ? (selectedLeague && sportMap[selectedLeague]) || sportMap.default
+          : undefined;
+
+        if (!apiSport) {
+          setGames([]); // fall back to sampleGames in UI
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke("odds-lines", {
+          body: { sport: apiSport, regions: "us", markets: "h2h,spreads,totals" },
+        });
+        if (!error && data?.games) {
+          setGames(data.games);
+        } else {
+          console.error("odds-lines error", error || data);
+          setGames([]);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchOdds();
-  }, []);
+  }, [selectedSport, selectedLeague]);
 
   // Sync tab, sport, and league with URL params
   useEffect(() => {
@@ -135,7 +164,31 @@ export const MainSportsbook = () => {
 
     const sportParam = (searchParams.get("sport") || "all").toLowerCase();
     const leagueParam = searchParams.get("league") || undefined;
-    if (sportParam !== selectedSport) setSelectedSport(sportParam);
+
+    // Derive sport from league if sport not set
+    if ((sportParam === "all" || !sportParam) && leagueParam) {
+      const leagueToSport: Record<string, string> = {
+        "Premier League": "soccer",
+        "La Liga": "soccer",
+        "Champions League": "soccer",
+        "MLS": "soccer",
+        NBA: "basketball",
+        NCAA: "basketball",
+        EuroLeague: "basketball",
+        NFL: "football",
+        "NCAA Football": "football",
+        MLB: "baseball",
+        "College Baseball": "baseball",
+        ATP: "tennis",
+        WTA: "tennis",
+        "Grand Slams": "tennis",
+      };
+      const derived = leagueToSport[leagueParam];
+      if (derived && derived !== selectedSport) setSelectedSport(derived);
+    } else if (sportParam !== selectedSport) {
+      setSelectedSport(sportParam);
+    }
+
     if (leagueParam !== selectedLeague) setSelectedLeague(leagueParam);
   }, [searchParams]);
 
@@ -248,7 +301,7 @@ const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
         {/* Left Sidebar - Sports Navigation */}
         {showSidebar && (
           <SportsNav 
-            className="hidden lg:block w-64 sticky top-16 self-start"
+            className="hidden lg:block w-64 max-h-[calc(100vh-4rem)] overflow-auto"
             selectedSport={selectedSport}
             selectedLeague={selectedLeague}
             onSportSelect={handleSportSelect}
@@ -394,16 +447,38 @@ const upcomingGames = [...filteredGames.filter((game) => !game.isLive)].sort(
               </TabsContent>
 
               <TabsContent value="popular" className="mt-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  {filteredGames.filter(game => game.popularBet).map(game => (
-                    <GameCard 
-                      key={game.id} 
-                      game={game} 
-                      onBetSelect={handleBetSelect}
-                      selectedKeys={selectedKeys}
-                    />
-                  ))}
-                </div>
+                {filteredGames.filter(game => game.popularBet).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 border rounded-lg bg-muted/20">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      No popular bets available for the selected filters.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedSport("all");
+                        setSelectedLeague(undefined);
+                        const params = new URLSearchParams(searchParams);
+                        params.delete("sport");
+                        params.delete("league");
+                        setSearchParams(params);
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {filteredGames.filter(game => game.popularBet).map(game => (
+                      <GameCard 
+                        key={game.id} 
+                        game={game} 
+                        onBetSelect={handleBetSelect}
+                        selectedKeys={selectedKeys}
+                      />
+                    ))}
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>

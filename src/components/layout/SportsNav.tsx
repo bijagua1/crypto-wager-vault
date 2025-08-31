@@ -12,6 +12,7 @@ import {
   Gamepad2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface SportCategory {
   id: string;
@@ -97,22 +98,27 @@ export const SportsNav = ({
       {/* Quick Actions */}
       <div className="space-y-2 mb-6">
         <Button 
+          asChild
           variant="secondary" 
           className="w-full justify-start gap-2 bg-primary/10 text-primary hover:bg-primary/20"
         >
-          <Zap className="h-4 w-4" />
-          Live Betting
-          <Badge variant="secondary" className="ml-auto bg-live text-white">
-            28
-          </Badge>
+          <Link to="/?tab=live">
+            <Zap className="h-4 w-4" />
+            Live Betting
+            <Badge variant="secondary" className="ml-auto bg-live text-white">
+              28
+            </Badge>
+          </Link>
         </Button>
         
-        <Button variant="ghost" className="w-full justify-start gap-2">
-          <Clock className="h-4 w-4" />
-          Today's Games
-          <Badge variant="secondary" className="ml-auto">
-            85
-          </Badge>
+        <Button asChild variant="ghost" className="w-full justify-start gap-2">
+          <Link to="/?tab=all">
+            <Clock className="h-4 w-4" />
+            Today's Games
+            <Badge variant="secondary" className="ml-auto">
+              85
+            </Badge>
+          </Link>
         </Button>
       </div>
 
@@ -172,7 +178,10 @@ export const SportsNav = ({
                           ? "bg-primary/10 text-primary" 
                           : "text-muted-foreground hover:text-foreground"
                       )}
-                      onClick={() => onLeagueSelect?.(league)}
+                      onClick={() => {
+                        onSportSelect?.(sport.id);
+                        onLeagueSelect?.(league);
+                      }}
                     >
                       {league}
                     </Button>
