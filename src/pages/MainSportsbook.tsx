@@ -133,13 +133,7 @@ export const MainSportsbook = () => {
         const sportMap = map[selectedSport] || undefined;
         const apiSport = sportMap
           ? (selectedLeague && sportMap[selectedLeague]) || sportMap.default
-          : undefined;
-
-        if (!apiSport) {
-          setGames([]); // fall back to sampleGames in UI
-          setLoading(false);
-          return;
-        }
+          : "soccer_epl"; // fetch real data even when 'all' is selected
 
         const { data, error } = await supabase.functions.invoke("odds-lines", {
           body: { sport: apiSport, regions: "us", markets: "h2h,spreads,totals" },
@@ -192,7 +186,7 @@ export const MainSportsbook = () => {
     if (leagueParam !== selectedLeague) setSelectedLeague(leagueParam);
   }, [searchParams]);
 
-  const sourceGames = games.length ? games : sampleGames;
+  const sourceGames = games;
 
   // Filter games based on selected sport and league
   const filteredGames = sourceGames.filter(game => {

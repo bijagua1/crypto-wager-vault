@@ -58,7 +58,26 @@ export const Header = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+
+    const refreshBalance = async () => {
+      const { data: sessionRes } = await supabase.auth.getSession();
+      const userId = sessionRes.session?.user?.id;
+      if (!userId) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('balance_usd')
+        .eq('id', userId)
+        .maybeSingle();
+      setBalanceUSD(profile?.balance_usd ?? 0);
+    };
+
+    const onBalanceRefresh = () => { refreshBalance(); };
+    window.addEventListener('balance:refresh', onBalanceRefresh);
+
+    return () => { 
+      subscription.unsubscribe();
+      window.removeEventListener('balance:refresh', onBalanceRefresh);
+    };
   }, []);
   const handleLogout = async () => {
     await supabase.auth.signOut();

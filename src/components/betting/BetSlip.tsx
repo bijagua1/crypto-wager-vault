@@ -140,6 +140,8 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
           title: "Bets placed successfully!", 
           description: `${singles.length} single bet(s) placed and balance updated.` 
         });
+        // Notify header to refresh balance
+        window.dispatchEvent(new CustomEvent('balance:refresh'));
 
       } else {
         // Parlay bet
@@ -173,6 +175,7 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
           title: "Parlay bet placed successfully!", 
           description: `Your ${activeSelections.length}-leg parlay has been accepted and balance updated.` 
         });
+        window.dispatchEvent(new CustomEvent('balance:refresh'));
       }
       
       setStakes({});
