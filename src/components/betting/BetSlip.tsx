@@ -130,7 +130,7 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
             p_stake_btc: currency === 'BTC' ? stake : 0,
             p_potential_payout_usd: currency === 'USD' ? Number(payout.toFixed(2)) : 0,
             p_potential_payout_btc: currency === 'BTC' ? Number(payout.toFixed(8)) : 0,
-            p_selections: JSON.stringify(selections)
+            p_selections: selections
           });
 
           if (error) throw error;
@@ -164,7 +164,7 @@ export const BetSlip = ({ selections, onRemoveSelection, onClearAll, className }
           p_stake_btc: currency === 'BTC' ? parlayStake : 0,
           p_potential_payout_usd: currency === 'USD' ? Number(payout.toFixed(2)) : 0,
           p_potential_payout_btc: currency === 'BTC' ? Number(payout.toFixed(8)) : 0,
-          p_selections: JSON.stringify(selections)
+          p_selections: selections
         });
 
         if (error) throw error;
