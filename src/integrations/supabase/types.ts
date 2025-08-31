@@ -187,6 +187,27 @@ export type Database = {
         }
         Returns: boolean
       }
+      place_bet: {
+        Args: {
+          p_bet_type: Database["public"]["Enums"]["bet_type"]
+          p_potential_payout_btc: number
+          p_potential_payout_usd: number
+          p_selections: Json
+          p_stake_btc: number
+          p_stake_usd: number
+          p_user_id: string
+        }
+        Returns: string
+      }
+      settle_bet: {
+        Args: {
+          p_bet_id: string
+          p_payout_btc?: number
+          p_payout_usd?: number
+          p_status: Database["public"]["Enums"]["bet_status"]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
